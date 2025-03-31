@@ -1,4 +1,4 @@
-# Projeto_interfaces_graficas_Java
+# Projeto_Gerenciador_Estoque_Java
 
 
 📋 Sistema de Gestão de Produtos (Java Swing)
