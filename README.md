@@ -6,7 +6,6 @@ Um projeto em Java Swing para gerenciamento básico de produtos, com interface g
 
 🖥️ Pré-visualização
 Tela Principal
-(Imagem ilustrativa - substitua por screenshot real do projeto)
 
 ✨ Funcionalidades
 Menu lateral com opções:
