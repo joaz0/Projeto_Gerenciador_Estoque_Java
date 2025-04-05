@@ -93,7 +93,7 @@ public class Tela_principal extends JFrame {
         JScrollPane descricaoScroll = new JScrollPane(descricao_cadastro);
         descricaoScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         descricaoScroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        descricaoScroll.setPreferredSize(new Dimension(450, 250));
+        descricaoScroll.setPreferredSize(new Dimension(200, 250));
         descricaoScroll.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(Color.GRAY),
             BorderFactory.createEmptyBorder(5, 5, 5, 5)
@@ -149,8 +149,7 @@ public class Tela_principal extends JFrame {
         
         // Linha 2 - Descrição
         gbc.gridx = 0;
-        gbc.gridy = 3;
-        gbc.gridwidth = 2;
+        gbc.gridy = 2;
         gbc.weightx = 1.0;
         gbc.weighty = 0;
         gbc.fill = GridBagConstraints.NONE;
@@ -160,7 +159,7 @@ public class Tela_principal extends JFrame {
         gbc.gridx = 1;
         gbc.gridy = 2;
         gbc.weightx = 1.0;
-        gbc.weighty = 1.0;  // Peso máximo para expandir verticalmente
+        gbc.weighty = 1.0;  
         gbc.fill = GridBagConstraints.BOTH;
         tela_cadastrar.add(descricaoScroll, gbc);
         
@@ -174,12 +173,17 @@ public class Tela_principal extends JFrame {
         gbc.anchor = GridBagConstraints.CENTER;
         
         
-        gbc.gridx = 0;
-        gbc.gridwidth = 1;
+        gbc.gridx = 1;
+        gbc.gridy = 3;
+        gbc.weightx = 1.0;
+        gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.EAST;
         tela_cadastrar.add(btn_cadastrar_produto, gbc);
 
         gbc.gridx = 1;
+        gbc.gridy = 3;
+        gbc.weightx = 1.0;
+        gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.WEST;
         tela_cadastrar.add(btn_cancelar_cadastrar, gbc);
         
