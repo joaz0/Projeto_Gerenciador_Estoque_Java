@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios Gerenciais - StockManager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 font-sans text-gray-800">
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-[#44474d] text-white flex flex-col justify-between shadow-xl print:hidden">
+            <div>
+                <div class="p-5 border-b border-gray-600 flex items-center space-x-3">
+                    <i class="fa-solid fa-boxes-stacked text-2xl text-emerald-400"></i>
+                    <div>
+                        <h1 class="font-bold text-lg leading-tight">StockManager</h1>
+                        <span class="text-xs text-gray-400">Gestão Web &bull; Cloud</span>
+                    </div>
+                </div>
+
+                <nav class="mt-6 px-4 space-y-2">
+                    <a href="/" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition">
+                        <i class="fa-solid fa-chart-pie w-5"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="/produtos" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition">
+                        <i class="fa-solid fa-box-open w-5"></i>
+                        <span>Produtos</span>
+                    </a>
+                    <a href="/movimentacoes" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition">
+                        <i class="fa-solid fa-right-left w-5"></i>
+                        <span>Movimentações</span>
+                    </a>
+                    <a href="/relatorios" class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-emerald-600 text-white font-medium shadow-md transition">
+                        <i class="fa-solid fa-file-waveform w-5"></i>
+                        <span>Relatórios</span>
+                    </a>
+                </nav>
+            </div>
+
+            <div class="p-4 border-t border-gray-600 text-xs text-gray-400 text-center">
+                <p>Spring Boot &bull; Supabase &bull; Render</p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto">
+            <header class="bg-white shadow-sm p-4 flex justify-between items-center px-8 print:hidden">
+                <h2 class="text-2xl font-bold text-gray-700">Relatório Executivo de Estoque</h2>
+                <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold shadow flex items-center space-x-2 transition text-sm">
+                    <i class="fa-solid fa-print"></i>
+                    <span>Imprimir / Salvar PDF</span>
+                </button>
+            </header>
+
+            <div class="p-8 max-w-7xl mx-auto space-y-8">
+                <!-- Summary Header (visible also when printing) -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800">Posição Atual de Inventário</h3>
+                        <p class="text-xs text-gray-500 mt-1">Gerado em: <span id="data-relatorio"></span></p>
+                    </div>
+                    <span class="px-3 py-1 bg-emerald-100 text-emerald-800 font-bold rounded-lg text-xs">Ativo</span>
+                </div>
+
+                <!-- KPI Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <p class="text-sm font-semibold text-gray-500">Valor Total do Patrimônio em Estoque</p>
+                        <h4 id="rel-valor-total" class="text-3xl font-extrabold text-emerald-600 mt-2">R$ 0,00</h4>
+                        <p class="text-xs text-gray-400 mt-2">Cálculo: Soma de (Preço &times; Qtd. em Estoque)</p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <p class="text-sm font-semibold text-gray-500">Volume de Mercadorias</p>
+                        <h4 id="rel-total-itens" class="text-3xl font-extrabold text-blue-600 mt-2">0</h4>
+                        <p class="text-xs text-gray-400 mt-2">Unidades físicas armazenadas no total</p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <p class="text-sm font-semibold text-gray-500">Atividades Registradas</p>
+                        <div class="flex items-center space-x-4 mt-2">
+                            <div>
+                                <span class="text-xs font-bold text-emerald-700">Entradas:</span>
+                                <span id="rel-total-entradas" class="text-xl font-bold text-gray-800 ml-1">0</span>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-rose-700">Saídas:</span>
+                                <span id="rel-total-saidas" class="text-xl font-bold text-gray-800 ml-1">0</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2">Histórico acumulado de movimentações</p>
+                    </div>
+                </div>
+
+                <!-- Critical Stock Section -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h4 class="font-bold text-gray-800 text-lg mb-4 flex items-center space-x-2">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
+                        <span>Produtos com Atenção Necessária (Estoque Baixo &le; 5 unidades)</span>
+                    </h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+                                <tr>
+                                    <th class="py-3 px-4">ID</th>
+                                    <th class="py-3 px-4">Produto</th>
+                                    <th class="py-3 px-4">Preço Unitário</th>
+                                    <th class="py-3 px-4 text-center">Saldo em Estoque</th>
+                                    <th class="py-3 px-4 text-right">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rel-tabela-baixo-estoque" class="divide-y divide-gray-100">
+                                <tr><td colspan="5" class="text-center py-4 text-gray-400">Carregando dados...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function carregarRelatorio() {
+            document.getElementById('data-relatorio').innerText = new Date().toLocaleString('pt-BR');
+            try {
+                const res = await fetch('/api/movimentacoes/relatorio');
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('rel-valor-total').innerText = 'R$ ' + Number(data.valorTotalEstoque || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                    document.getElementById('rel-total-itens').innerText = data.totalItensEmEstoque + ' unidades';
+                    document.getElementById('rel-total-entradas').innerText = data.totalEntradas;
+                    document.getElementById('rel-total-saidas').innerText = data.totalSaidas;
+
+                    const tbody = document.getElementById('rel-tabela-baixo-estoque');
+                    if (!data.produtosEstoqueBaixo || data.produtosEstoqueBaixo.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-emerald-600 font-semibold">Nenhum produto em nível crítico de estoque no momento.</td></tr>';
+                    } else {
+                        tbody.innerHTML = data.produtosEstoqueBaixo.map(p => `
+                            <tr>
+                                <td class="py-3 px-4 text-gray-400 font-mono text-xs">#${p.id}</td>
+                                <td class="py-3 px-4 font-bold text-gray-800">${p.nome}</td>
+                                <td class="py-3 px-4 text-gray-600">R$ ${Number(p.preco).toFixed(2)}</td>
+                                <td class="py-3 px-4 text-center font-bold ${p.quantidadeEstoque === 0 ? 'text-red-600' : 'text-amber-600'}">
+                                    ${p.quantidadeEstoque} un
+                                </td>
+                                <td class="py-3 px-4 text-right">
+                                    <span class="px-2.5 py-1 rounded-full text-xs font-bold ${p.quantidadeEstoque === 0 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}">
+                                        ${p.quantidadeEstoque === 0 ? 'ESGOTADO' : 'ESTOQUE CRÍTICO'}
+                                    </span>
+                                </td>
+                            </tr>
+                        `).join('');
+                    }
+                }
+            } catch (err) {
+                console.error("Erro ao carregar relatório:", err);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', carregarRelatorio);
+    </script>
+</body>
+</html>

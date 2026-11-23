@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão de Estoque</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 font-sans text-gray-800">
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar Menu (Inspirado no Menu lateral do Swing) -->
+        <aside class="w-64 bg-[#44474d] text-white flex flex-col justify-between shadow-xl">
+            <div>
+                <div class="p-5 border-b border-gray-600 flex items-center space-x-3">
+                    <i class="fa-solid fa-boxes-stacked text-2xl text-emerald-400"></i>
+                    <div>
+                        <h1 class="font-bold text-lg leading-tight">StockManager</h1>
+                        <span class="text-xs text-gray-400">Gestão Web &bull; Cloud</span>
+                    </div>
+                </div>
+
+                <nav class="mt-6 px-4 space-y-2">
+                    <a href="/" class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-emerald-600 text-white font-medium shadow-md transition">
+                        <i class="fa-solid fa-chart-pie w-5"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="/produtos" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition">
+                        <i class="fa-solid fa-box-open w-5"></i>
+                        <span>Produtos</span>
+                    </a>
+                    <a href="/movimentacoes" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition">
+                        <i class="fa-solid fa-right-left w-5"></i>
+                        <span>Movimentações</span>
+                    </a>
+                    <a href="/relatorios" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition">
+                        <i class="fa-solid fa-file-waveform w-5"></i>
+                        <span>Relatórios</span>
+                    </a>
+                </nav>
+            </div>
+
+            <div class="p-4 border-t border-gray-600 text-xs text-gray-400 text-center">
+                <p>Spring Boot &bull; Supabase &bull; Render</p>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 overflow-y-auto">
+            <header class="bg-white shadow-sm p-4 flex justify-between items-center px-8">
+                <h2 class="text-2xl font-bold text-gray-700">Visão Geral do Estoque</h2>
+                <div class="flex items-center space-x-4">
+                    <a href="/produtos" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold shadow flex items-center space-x-2 transition text-sm">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Novo Produto</span>
+                    </a>
+                </div>
+            </header>
+
+            <div class="p-8 max-w-7xl mx-auto space-y-8">
+                <!-- Status Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-500">Produtos Cadastrados</p>
+                            <h3 id="card-total-produtos" class="text-3xl font-extrabold text-gray-800 mt-1">--</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-box"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-500">Total em Unidades</p>
+                            <h3 id="card-total-itens" class="text-3xl font-extrabold text-gray-800 mt-1">--</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-cubes"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-500">Valor do Estoque</p>
+                            <h3 id="card-valor-total" class="text-2xl font-extrabold text-gray-800 mt-1">R$ --</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-wallet"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-500">Alertas de Reposição</p>
+                            <h3 id="card-estoque-baixo" class="text-3xl font-extrabold text-red-600 mt-1">--</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-red-100 text-red-600 rounded-lg flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activities & Low Stock Table -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Produtos com Baixo Estoque -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-gray-700 text-lg flex items-center space-x-2">
+                                <i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
+                                <span>Estoque Baixo (&le; 5 unidades)</span>
+                            </h3>
+                            <a href="/movimentacoes" class="text-xs text-emerald-600 hover:underline font-semibold">Repor estoque &rarr;</a>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                                    <tr>
+                                        <th class="py-3 px-4">Produto</th>
+                                        <th class="py-3 px-4">Preço</th>
+                                        <th class="py-3 px-4 text-center">Saldo</th>
+                                        <th class="py-3 px-4 text-right">Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-baixo-estoque" class="divide-y divide-gray-100">
+                                    <tr><td colspan="4" class="text-center py-4 text-gray-400">Carregando...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Últimas Movimentações -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-gray-700 text-lg flex items-center space-x-2">
+                                <i class="fa-solid fa-clock-rotate-left text-blue-500"></i>
+                                <span>Últimas Movimentações</span>
+                            </h3>
+                            <a href="/movimentacoes" class="text-xs text-blue-600 hover:underline font-semibold">Ver histórico completo &rarr;</a>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                                    <tr>
+                                        <th class="py-3 px-4">Tipo</th>
+                                        <th class="py-3 px-4">Produto</th>
+                                        <th class="py-3 px-4 text-center">Qtd</th>
+                                        <th class="py-3 px-4 text-right">Data</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-ultimas-movimentacoes" class="divide-y divide-gray-100">
+                                    <tr><td colspan="4" class="text-center py-4 text-gray-400">Carregando...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function carregarDashboard() {
+            try {
+                // Relatório resumido
+                const resRelatorio = await fetch('/api/movimentacoes/relatorio');
+                if (resRelatorio.ok) {
+                    const data = await resRelatorio.json();
+                    document.getElementById('card-total-produtos').innerText = data.totalProdutos;
+                    document.getElementById('card-total-itens').innerText = data.totalItensEmEstoque;
+                    document.getElementById('card-valor-total').innerText = 'R$ ' + Number(data.valorTotalEstoque || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                    document.getElementById('card-estoque-baixo').innerText = data.produtosEstoqueBaixo ? data.produtosEstoqueBaixo.length : 0;
+
+                    const tbodyBaixo = document.getElementById('tabela-baixo-estoque');
+                    if (!data.produtosEstoqueBaixo || data.produtosEstoqueBaixo.length === 0) {
+                        tbodyBaixo.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-emerald-600 font-medium">Nenhum produto em nível crítico!</td></tr>';
+                    } else {
+                        tbodyBaixo.innerHTML = data.produtosEstoqueBaixo.map(p => `
+                            <tr class="hover:bg-gray-50">
+                                <td class="py-3 px-4 font-semibold text-gray-800">${p.nome}</td>
+                                <td class="py-3 px-4 text-gray-600">R$ ${Number(p.preco).toFixed(2)}</td>
+                                <td class="py-3 px-4 text-center">
+                                    <span class="px-2.5 py-0.5 rounded-full text-xs font-bold ${p.quantidadeEstoque === 0 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}">
+                                        ${p.quantidadeEstoque} un
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 text-right">
+                                    <a href="/movimentacoes?produtoId=${p.id}" class="text-xs bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-3 py-1.5 rounded-md font-semibold transition">Entrada</a>
+                                </td>
+                            </tr>
+                        `).join('');
+                    }
+                }
+
+                // Últimas 5 movimentações
+                const resMov = await fetch('/api/movimentacoes');
+                if (resMov.ok) {
+                    const movs = await resMov.json();
+                    const tbodyMov = document.getElementById('tabela-ultimas-movimentacoes');
+                    if (movs.length === 0) {
+                        tbodyMov.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-400">Nenhuma movimentação registrada.</td></tr>';
+                    } else {
+                        tbodyMov.innerHTML = movs.slice(0, 5).map(m => `
+                            <tr class="hover:bg-gray-50">
+                                <td class="py-3 px-4">
+                                    <span class="px-2 py-0.5 rounded text-xs font-bold ${m.tipo === 'ENTRADA' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+                                        ${m.tipo}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 font-medium text-gray-800">${m.produtoNome}</td>
+                                <td class="py-3 px-4 text-center font-bold">${m.quantidade}</td>
+                                <td class="py-3 px-4 text-right text-xs text-gray-500">${new Date(m.dataMovimentacao).toLocaleDateString('pt-BR')}</td>
+                            </tr>
+                        `).join('');
+                    }
+                }
+            } catch (err) {
+                console.error("Erro ao carregar dados do dashboard:", err);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', carregarDashboard);
+    </script>
+</body>
+</html>

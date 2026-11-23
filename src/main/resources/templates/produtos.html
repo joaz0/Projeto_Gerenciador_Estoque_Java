@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Produtos - StockManager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 font-sans text-gray-800">
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-[#44474d] text-white flex flex-col justify-between shadow-xl">
+            <div>
+                <div class="p-5 border-b border-gray-600 flex items-center space-x-3">
+                    <i class="fa-solid fa-boxes-stacked text-2xl text-emerald-400"></i>
+                    <div>
+                        <h1 class="font-bold text-lg leading-tight">StockManager</h1>
+                        <span class="text-xs text-gray-400">Gestão Web &bull; Cloud</span>
+                    </div>
+                </div>
+
+                <nav class="mt-6 px-4 space-y-2">
+                    <a href="/" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition">
+                        <i class="fa-solid fa-chart-pie w-5"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="/produtos" class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-emerald-600 text-white font-medium shadow-md transition">
+                        <i class="fa-solid fa-box-open w-5"></i>
+                        <span>Produtos</span>
+                    </a>
+                    <a href="/movimentacoes" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition">
+                        <i class="fa-solid fa-right-left w-5"></i>
+                        <span>Movimentações</span>
+                    </a>
+                    <a href="/relatorios" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition">
+                        <i class="fa-solid fa-file-waveform w-5"></i>
+                        <span>Relatórios</span>
+                    </a>
+                </nav>
+            </div>
+
+            <div class="p-4 border-t border-gray-600 text-xs text-gray-400 text-center">
+                <p>Spring Boot &bull; Supabase &bull; Render</p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto">
+            <header class="bg-white shadow-sm p-4 flex justify-between items-center px-8">
+                <h2 class="text-2xl font-bold text-gray-700">Controle de Produtos</h2>
+                <button onclick="abrirModalCadastro()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold shadow flex items-center space-x-2 transition text-sm">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Cadastrar Produto</span>
+                </button>
+            </header>
+
+            <div class="p-8 max-w-7xl mx-auto space-y-6">
+                <!-- Search & Filters -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                    <div class="relative w-96">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input type="text" id="campo-busca" onkeyup="buscarComDebounce()" placeholder="Buscar produto por nome..." 
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <span id="contador-produtos" class="text-sm font-semibold text-gray-500">Total: 0 produtos</span>
+                </div>
+
+                <!-- Product Table -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-gray-50 text-gray-600 uppercase text-xs font-semibold border-b border-gray-200">
+                            <tr>
+                                <th class="py-3 px-6">ID</th>
+                                <th class="py-3 px-6">Nome</th>
+                                <th class="py-3 px-6">Descrição</th>
+                                <th class="py-3 px-6">Preço Unitário</th>
+                                <th class="py-3 px-6 text-center">Em Estoque</th>
+                                <th class="py-3 px-6 text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-produtos" class="divide-y divide-gray-100">
+                            <tr><td colspan="6" class="text-center py-6 text-gray-400">Carregando catálogo de produtos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal de Cadastro / Edição (Campos da Tela_principal.java) -->
+    <div id="modal-produto" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-fade-in">
+            <div class="bg-[#44474d] text-white px-6 py-4 flex justify-between items-center">
+                <h3 id="modal-titulo" class="font-bold text-lg flex items-center space-x-2">
+                    <i class="fa-solid fa-box-open text-emerald-400"></i>
+                    <span>Cadastrar Novo Produto</span>
+                </h3>
+                <button onclick="fecharModal()" class="text-gray-400 hover:text-white text-xl">&times;</button>
+            </div>
+
+            <form id="form-produto" onsubmit="salvarProduto(event)" class="p-6 space-y-4">
+                <input type="hidden" id="prod-id">
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Nome do Produto *</label>
+                    <input type="text" id="prod-nome" required placeholder="Ex: Teclado Mecânico RGB"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Preço (R$) *</label>
+                        <input type="number" step="0.01" min="0" id="prod-preco" required placeholder="0.00"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Qtd. em Estoque *</label>
+                        <input type="number" min="0" id="prod-quantidade" required placeholder="0"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Descrição</label>
+                    <textarea id="prod-descricao" rows="4" placeholder="Digite a descrição do produto aqui..."
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-100">
+                    <button type="button" onclick="fecharModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-50 transition">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold shadow transition">
+                        Salvar cadastro
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let debounceTimer;
+
+        function buscarComDebounce() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(carregarProdutos, 300);
+        }
+
+        async function carregarProdutos() {
+            const busca = document.getElementById('campo-busca').value;
+            const url = busca ? `/api/produtos?busca=${encodeURIComponent(busca)}` : '/api/produtos';
+
+            try {
+                const res = await fetch(url);
+                if (res.ok) {
+                    const produtos = await res.json();
+                    document.getElementById('contador-produtos').innerText = `Total: ${produtos.length} produtos`;
+
+                    const tbody = document.getElementById('tabela-produtos');
+                    if (produtos.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-gray-400">Nenhum produto cadastrado ou encontrado.</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = produtos.map(p => `
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="py-3 px-6 text-gray-400 font-mono text-xs">#${p.id}</td>
+                            <td class="py-3 px-6 font-bold text-gray-800">${p.nome}</td>
+                            <td class="py-3 px-6 text-gray-500 text-xs max-w-xs truncate" title="${p.descricao || ''}">${p.descricao || '-'}</td>
+                            <td class="py-3 px-6 font-semibold text-gray-700">R$ ${Number(p.preco).toFixed(2)}</td>
+                            <td class="py-3 px-6 text-center">
+                                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold ${p.quantidadeEstoque <= 5 ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}">
+                                    ${p.quantidadeEstoque} un
+                                </span>
+                            </td>
+                            <td class="py-3 px-6 text-right space-x-2">
+                                <button onclick="editarProduto(${p.id})" class="text-blue-600 hover:text-blue-800 p-1" title="Editar">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <button onclick="excluirProduto(${p.id}, '${p.nome.replace(/'/g, "\\'")}')" class="text-red-600 hover:text-red-800 p-1" title="Excluir">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (err) {
+                console.error("Erro ao carregar produtos:", err);
+            }
+        }
+
+        function abrirModalCadastro() {
+            document.getElementById('modal-titulo').innerHTML = '<i class="fa-solid fa-box-open text-emerald-400 mr-2"></i> Cadastrar Novo Produto';
+            document.getElementById('form-produto').reset();
+            document.getElementById('prod-id').value = '';
+            document.getElementById('modal-produto').classList.remove('hidden');
+        }
+
+        async function editarProduto(id) {
+            try {
+                const res = await fetch(`/api/produtos/${id}`);
+                if (res.ok) {
+                    const p = await res.json();
+                    document.getElementById('modal-titulo').innerHTML = '<i class="fa-solid fa-pen text-amber-400 mr-2"></i> Editar Produto #' + p.id;
+                    document.getElementById('prod-id').value = p.id;
+                    document.getElementById('prod-nome').value = p.nome;
+                    document.getElementById('prod-preco').value = p.preco;
+                    document.getElementById('prod-quantidade').value = p.quantidadeEstoque;
+                    document.getElementById('prod-descricao').value = p.descricao || '';
+                    document.getElementById('modal-produto').classList.remove('hidden');
+                }
+            } catch (err) {
+                alert("Erro ao carregar detalhes do produto.");
+            }
+        }
+
+        function fecharModal() {
+            document.getElementById('modal-produto').classList.add('hidden');
+        }
+
+        async function salvarProduto(event) {
+            event.preventDefault();
+            const id = document.getElementById('prod-id').value;
+            const dto = {
+                nome: document.getElementById('prod-nome').value,
+                preco: parseFloat(document.getElementById('prod-preco').value),
+                quantidadeEstoque: parseInt(document.getElementById('prod-quantidade').value),
+                descricao: document.getElementById('prod-descricao').value
+            };
+
+            const url = id ? `/api/produtos/${id}` : '/api/produtos';
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dto)
+                });
+
+                if (res.ok) {
+                    fecharModal();
+                    carregarProdutos();
+                } else {
+                    const err = await res.json();
+                    alert("Erro ao salvar produto: " + (err.message || JSON.stringify(err)));
+                }
+            } catch (err) {
+                alert("Erro de conexão com a API.");
+            }
+        }
+
+        async function excluirProduto(id, nome) {
+            if (!confirm(`Deseja realmente excluir o produto "${nome}"?`)) return;
+
+            try {
+                const res = await fetch(`/api/produtos/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    carregarProdutos();
+                } else {
+                    alert("Erro ao excluir produto.");
+                }
+            } catch (err) {
+                alert("Erro ao conectar à API.");
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', carregarProdutos);
+    </script>
+</body>
+</html>
