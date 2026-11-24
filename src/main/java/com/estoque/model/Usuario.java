@@ -1,6 +1,8 @@
 package com.estoque.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 
 @Entity
@@ -11,12 +13,16 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "O nome é obrigatório")
     @Column(nullable = false, length = 100)
     private String nome;
 
+    @NotBlank(message = "O email é obrigatório")
+    @Email(message = "Formato de e-mail inválido")
     @Column(nullable = false, unique = true, length = 150)
     private String email;
 
+    @NotBlank(message = "A senha é obrigatória")
     @Column(nullable = false)
     private String senha;
 

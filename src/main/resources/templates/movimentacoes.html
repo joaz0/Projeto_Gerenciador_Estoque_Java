@@ -218,6 +218,16 @@
             const quantidade = parseInt(document.getElementById('mov-quantidade').value);
             const motivo = document.getElementById('mov-motivo').value;
 
+            if (!produtoId || isNaN(produtoId)) {
+                alert("Por favor, selecione um produto válido.");
+                return;
+            }
+
+            if (!quantidade || isNaN(quantidade) || quantidade <= 0) {
+                alert("Por favor, informe uma quantidade válida maior que zero.");
+                return;
+            }
+
             const endpoint = tipo === 'ENTRADA' ? '/api/movimentacoes/entrada' : '/api/movimentacoes/saida';
 
             try {

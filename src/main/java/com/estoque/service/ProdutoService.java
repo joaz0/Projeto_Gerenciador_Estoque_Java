@@ -1,6 +1,7 @@
 package com.estoque.service;
 
 import com.estoque.dto.ProdutoDTO;
+import com.estoque.exception.RecursoNaoEncontradoException;
 import com.estoque.model.Movimentacao;
 import com.estoque.model.Produto;
 import com.estoque.model.TipoMovimentacao;
@@ -37,7 +38,7 @@ public class ProdutoService {
     @Transactional(readOnly = true)
     public ProdutoDTO buscarPorId(Long id) {
         Produto produto = produtoRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Produto não encontrado com o ID: " + id));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado com o ID: " + id));
         return converterParaDTO(produto);
     }
 
@@ -63,12 +64,12 @@ public class ProdutoService {
     @Transactional
     public ProdutoDTO atualizar(Long id, ProdutoDTO dto) {
         Produto produto = produtoRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Produto não encontrado com o ID: " + id));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado com o ID: " + id));
 
         produto.setNome(dto.getNome().trim());
         produto.setDescricao(dto.getDescricao());
         produto.setPreco(dto.getPreco());
-        // Obs: quantidade de estoque é controlada preferencialmente por Entrada/Saída,
+        // Quantidade de estoque é controlada preferencialmente por Entrada/Saída,
         // mas permitimos ajuste direto se fornecido
         if (dto.getQuantidadeEstoque() != null) {
             produto.setQuantidadeEstoque(dto.getQuantidadeEstoque());
@@ -80,10 +81,16 @@ public class ProdutoService {
 
     @Transactional
     public void excluir(Long id) {
-        if (!produtoRepository.existsById(id)) {
-            throw new IllegalArgumentException("Produto não encontrado com o ID: " + id);
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado com o ID: " + id));
+
+        // Remove movimentações vinculadas primeiro para garantir integridade referencial
+        List<Movimentacao> movimentacoes = movimentacaoRepository.findByProdutoIdOrderByDataMovimentacaoDesc(id);
+        if (!movimentacoes.isEmpty()) {
+            movimentacaoRepository.deleteAll(movimentacoes);
         }
-        produtoRepository.deleteById(id);
+
+        produtoRepository.delete(produto);
     }
 
     public ProdutoDTO converterParaDTO(Produto p) {

@@ -22,8 +22,8 @@ WORKDIR /app
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 
-# Copia o jar compilado do estágio de build
-COPY --from=build /app/target/gerenciador-estoque-*.jar app.jar
+# Copia o jar compilado do estágio de build com permissões para o appuser
+COPY --from=build --chown=appuser:appgroup /app/target/gerenciador-estoque-*.jar app.jar
 
 # Variáveis de ambiente padrão
 ENV PORT=8080

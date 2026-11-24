@@ -1,5 +1,6 @@
 package com.estoque.controller;
 
+import com.estoque.exception.RecursoNaoEncontradoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -14,14 +15,29 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
+    @ExceptionHandler(RecursoNaoEncontradoException.class)
+    public ResponseEntity<Map<String, Object>> handleRecursoNaoEncontrado(RecursoNaoEncontradoException ex) {
         Map<String, Object> error = new HashMap<>();
         error.put("timestamp", LocalDateTime.now());
         error.put("status", HttpStatus.NOT_FOUND.value());
         error.put("error", "Recurso não encontrado");
         error.put("message", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("timestamp", LocalDateTime.now());
+
+        // Se a mensagem indicar que não foi encontrado, retorna 404, caso contrário 400 Bad Request
+        boolean naoEncontrado = ex.getMessage() != null && ex.getMessage().toLowerCase().contains("não encontrado");
+        HttpStatus status = naoEncontrado ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+
+        error.put("status", status.value());
+        error.put("error", naoEncontrado ? "Recurso não encontrado" : "Requisição inválida");
+        error.put("message", ex.getMessage());
+        return ResponseEntity.status(status).body(error);
     }
 
     @ExceptionHandler(IllegalStateException.class)
@@ -48,5 +64,15 @@ public class GlobalExceptionHandler {
         error.put("error", "Erro de validação");
         error.put("validations", fieldErrors);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("timestamp", LocalDateTime.now());
+        error.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+        error.put("error", "Erro interno do servidor");
+        error.put("message", ex.getMessage() != null ? ex.getMessage() : "Ocorreu um erro inesperado");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 }

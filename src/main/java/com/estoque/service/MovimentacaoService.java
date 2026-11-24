@@ -4,6 +4,7 @@ import com.estoque.dto.MovimentacaoRequestDTO;
 import com.estoque.dto.MovimentacaoResponseDTO;
 import com.estoque.dto.ProdutoDTO;
 import com.estoque.dto.RelatorioEstoqueDTO;
+import com.estoque.exception.RecursoNaoEncontradoException;
 import com.estoque.model.Movimentacao;
 import com.estoque.model.Produto;
 import com.estoque.model.TipoMovimentacao;
@@ -36,7 +37,7 @@ public class MovimentacaoService {
     @Transactional
     public MovimentacaoResponseDTO registrarEntrada(MovimentacaoRequestDTO dto) {
         Produto produto = produtoRepository.findById(dto.getProdutoId())
-                .orElseThrow(() -> new IllegalArgumentException("Produto não encontrado com ID: " + dto.getProdutoId()));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado com ID: " + dto.getProdutoId()));
 
         int novaQtd = (produto.getQuantidadeEstoque() != null ? produto.getQuantidadeEstoque() : 0) + dto.getQuantidade();
         produto.setQuantidadeEstoque(novaQtd);
@@ -60,7 +61,7 @@ public class MovimentacaoService {
     @Transactional
     public MovimentacaoResponseDTO registrarSaida(MovimentacaoRequestDTO dto) {
         Produto produto = produtoRepository.findById(dto.getProdutoId())
-                .orElseThrow(() -> new IllegalArgumentException("Produto não encontrado com ID: " + dto.getProdutoId()));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado com ID: " + dto.getProdutoId()));
 
         int estoqueAtual = produto.getQuantidadeEstoque() != null ? produto.getQuantidadeEstoque() : 0;
         if (estoqueAtual < dto.getQuantidade()) {

@@ -23,14 +23,15 @@
 4. O script criará as tabelas `usuarios`, `produtos`, `movimentacoes`, índices e dados iniciais de teste.
 
 ### 1.2 Obter a String de Conexão com Connection Pooler (Porta 6543)
-Para evitar o esgotamento do limite de conexões no plano gratuito do Supabase, use sempre o **Transaction Pooler**:
+Para evitar o esgotamento do limite de conexões no plano gratuito do Supabase, use o **Transaction Pooler**:
 1. No Supabase, vá em **Project Settings > Database**.
 2. Na seção **Connection string**, selecione a aba **URI** e o modo **Transaction** (porta **6543**).
 3. A URL terá o formato:
    ```text
-   jdbc:postgresql://aws-0-sa-east-1.pooler.supabase.com:6543/postgres?sslmode=require
+   jdbc:postgresql://aws-0-sa-east-1.pooler.supabase.com:6543/postgres?sslmode=require&prepareThreshold=0
    ```
-4. O usuário do pooler terá o formato `postgres.[ref-do-projeto]`.
+   > ⚠️ **IMPORTANTE:** O parâmetro `&prepareThreshold=0` é essencial ao usar o pooler na porta 6543 para desativar o cache de prepared statements do driver PostgreSQL, evitando erros de execução no PgBouncer/Supavisor.
+4. O usuário do pooler terá o formato `postgres.[ref-do-projeto]`. A sua referência de projeto é a sequência de caracteres na URL do seu painel do Supabase (`https://supabase.com/dashboard/project/<ref-do-projeto>`).
 
 ---
 
@@ -48,12 +49,16 @@ O Render não possui runtime nativo para Java no plano gratuito, mas suporta con
    - **Region:** Selecione a mais próxima (ex: `Ohio` ou `Oregon`)
    - **Branch:** `main` (ou `master`)
    - **Instance Type:** `Free`
-5. Na seção **Environment Variables**, adicione as seguintes variáveis:
-   | Chave | Valor (Exemplo) |
+5. **Configuração Obrigatória de Variáveis de Ambiente:**
+   Acesse a seção **Environment Variables** (ou a aba **Environment** do serviço) e cadastre:
+   | Chave | Valor (Substitua pelos seus dados reais) |
    |---|---|
-   | `SPRING_DATASOURCE_URL` | `jdbc:postgresql://aws-0-sa-east-1.pooler.supabase.com:6543/postgres?sslmode=require` |
-   | `SPRING_DATASOURCE_USERNAME` | `postgres.sua_referencia_de_projeto` |
-   | `SPRING_DATASOURCE_PASSWORD` | `sua_senha_do_supabase` |
+   | `SPRING_DATASOURCE_URL` | `jdbc:postgresql://aws-0-sa-east-1.pooler.supabase.com:6543/postgres?sslmode=require&prepareThreshold=0` |
+   | `SPRING_DATASOURCE_USERNAME` | `postgres.SEU_PROJECT_REF_REAL` (ex: `postgres.abcdefghijklmnop`) |
+   | `SPRING_DATASOURCE_PASSWORD` | `sua_senha_real_do_supabase` |
+
+   > 🚨 **CUIDADO COM O ERRO COMUM:** Se você não configurar essas variáveis no Render, o Spring Boot tentará conectar com o usuário de exemplo `postgres.sua_referencia_de_projeto` e a aplicação falhará ao iniciar com o erro:
+   > `PSQLException: FATAL: (ENOTFOUND) tenant/user postgres.sua_referencia_de_projeto not found`
 6. Clique em **Create Web Service**.
 7. O Render executará o `Dockerfile` multi-stage (compilação Maven + imagem leve Alpine JRE) e disponibilizará sua aplicação em uma URL pública (ex: `https://gerenciador-estoque.onrender.com`).
 
