@@ -42,6 +42,12 @@ buildNumber.properties
 .classpath
 bin/
 
+# Environment / Local Secrets
+.env
+.env.*
+*local.properties
+application-local.properties
+
 # OS files
 .DS_Store
 Thumbs.db
